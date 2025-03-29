@@ -1,0 +1,82 @@
+/*
+ * Problem statement:
+ *  2 copiers:
+ *  - holds 'capacity of paper
+ *
+ *  agent me: (keep printers non-empty)
+ *  - Can check both copiers for how much paper they have
+ *  - Can visit one copier per step (day)
+ *  - Can fill 'maxfill units of paper
+ *  - knows 'maxuse variable
+ *
+ *  agent Adversary: (empty printers)
+ *  - remove random amount from copiers up to 'maxuse
+ *
+ *  Work with the synthesiser to keep printers non-empty
+ *
+ */
+
+pragma options "--bnd-unroll-amnt 14"; 
+
+// depth of function inlining which significantly affects the search space and performance; you may want to adjust it to the minimally sufficient amount
+pragma options "--bnd-inline-amnt 4";
+
+// make a test harness for random inputs
+pragma options "--fe-output-test";
+
+int STEPS=14;
+
+int maxfill=20;
+int maxuse=13;
+int capacity = 27;
+
+int[2] copier;
+//non-constant global variables cannot be accessed from other packages.
+//so we need an accessor function to call getCopiers.
+int[2] getCopiers(){ return copier; }
+
+int min(int x, int y){ return x>y?y:x;}
+
+package Adversary{   
+    /**
+     * Adversary is trying to empty the copier. 
+     * In timestep i, adversary takes getStep(i) units from copier[0] and the rest from copier[1]
+     * for a total of maxuse units removed. 
+     * The way we model the nondeterministic choices of the adversary is by having an array of 
+     * nondeterministic values that is initialized from inputs to the harness.
+     * 
+     * initND will return false if the choices violate the assumptions of how many sheets can be removed.
+     * 
+     */
+    int[STEPS] remove;
+    bit initND(int[STEPS] random){
+        remove=random;
+        for(int i=0; i<STEPS; ++i){
+            if(random[i]>maxuse){ return false; }
+        }
+        return true;
+    }
+    int getStep(int i){
+        int rv = remove[i];        
+        return rv;
+    }    
+}
+
+package Me{
+    /**
+     * I have to choose one copier to put my daily allocation of paper. 
+     * getStep tells me what copier to choose.
+     */
+    bit getStep(int i){
+        //Your strategy code goes here.
+    }
+}
+
+
+void init(){
+    copier[0] = capacity;
+    copier[1] = capacity;
+    
+}
+
+//Your harness code goes here.
